@@ -1,14 +1,15 @@
-#필요한 요소 import
+# 필요한 요소 import
 import os, json, aiofiles
 from py_trans import PyTranslator
 import pythonbible as bible
 import random
 
-#tr 객체 선언
+# tr 객체 선언
 tr = PyTranslator()
 
-#성경 책 dict
+# 성경 책 dict
 bible_books = {
+    #korean
     "창세기": 1,
     "출애굽기": 2,
     "레위기": 3,
@@ -74,51 +75,125 @@ bible_books = {
     "요한2서": 63,
     "요한3서": 64,
     "유다서": 65,
-    "요한계시록": 66
+    "요한계시록": 66,
 }
-#번역 해주는 함수
+
+bible_books_eng = {
+    "Genesis": 1,
+    "Exodus": 2,
+    "Leviticus": 3,
+    "Numbers": 4,
+    "Deuteronomy": 5,
+    "Joshua": 6,
+    "Judges": 7,
+    "Ruth": 8,
+    "1 Samuel": 9,
+    "2 Samuel": 10,
+    "1 Kings": 11,
+    "2 Kings": 12,
+    "1 Chronicles": 13,
+    "2 Chronicles": 14,
+    "Ezra": 15,
+    "Nehemiah": 16,
+    "Esther": 17,
+    "Job": 18,
+    "Psalms": 19,
+    "Proverbs": 20,
+    "Ecclesiastes": 21,
+    "Song of Solomon": 22,
+    "Isaiah": 23,
+    "Jeremiah": 24,
+    "Lamentations": 25,
+    "Ezekiel": 26,
+    "Daniel": 27,
+    "Hosea": 28,
+    "Joel": 29,
+    "Amos": 30,
+    "Obadiah": 31,
+    "Jonah": 32,
+    "Micah": 33,
+    "Nahum": 34,
+    "Habakkuk": 35,
+    "Zephaniah": 36,
+    "Haggai": 37,
+    "Zechariah": 38,
+    "Malachi": 39,
+    "Matthew": 40,
+    "Mark": 41,
+    "Luke": 42,
+    "John": 43,
+    "Acts": 44,
+    "Romans": 45,
+    "1 Corinthians": 46,
+    "2 Corinthians": 47,
+    "Galatians": 48,
+    "Ephesians": 49,
+    "Philippians": 50,
+    "Colossians": 51,
+    "1 Thessalonians": 52,
+    "2 Thessalonians": 53,
+    "1 Timothy": 54,
+    "2 Timothy": 55,
+    "Titus": 56,
+    "Philemon": 57,
+    "Hebrews": 58,
+    "James": 59,
+    "1 Peter": 60,
+    "2 Peter": 61,
+    "1 John": 62,
+    "2 John": 63,
+    "3 John": 64,
+    "Jude": 65,
+    "Revelation": 66
+}
+
+# 번역 해주는 함수
 def translate_text(text):
     translated_info = tr.google(str(text), "ko")
     # 예시 : {'status': 'success', 'engine': 'Google Translate', 'translation': '안녕하세요!', 'dest': 'ko', 'orgin': 'Hello!', 'origin_lang': 'en'}
-    translated_text = translated_info['translation']
-    return translated_text
+    return translated_info['translation']
 
-#id 00n 으로 format 해주는 함수
+# id 00n 으로 format 해주는 함수
 def formating_nums(id):
-    id = "{:03d}".format(id)
-    return id
+    return "{:03d}".format(id)
 
-#verse ID 찾아주는 함수(효율성 개선 시급)
-def verse_ID_generator(book,chapter,verse):
-    book_num = str(bible_books.get(book))
+# verse ID 찾아주는 함수(효율성 개선 시급)
+def verse_ID_generator(book, chapter, verse):
+    if type(book) == str:
+        book_num = str(bible_books.get(book))
+    elif type(book) == int:
+        book_num = formating_nums(book)
+
     chapter_num = formating_nums(int(chapter))
     verse_num = formating_nums(int(verse))
-    
-    verse_ID = book_num + chapter_num + verse_num
-    return verse_ID
 
-#구문 찾아주는 함수
-def find_verse(): 
-    book = input("책 : ")
-    chapter = input("장 : ")
-    verse = input("절 : ")
+    return book_num + chapter_num + verse_num
 
-    verse_ID = int(verse_ID_generator(book,chapter,verse))
+
+# 구문 찾아주는 함수
+def find_verse(book, chapter, verse):
+    verse_ID = int(verse_ID_generator(book, chapter, verse))
     verse_text = bible.get_verse_text(verse_id=verse_ID, version=bible.Version.AMERICAN_STANDARD)
     result = translate_text(verse_text)
     print(result)
 
-# #랜덤으로 절 찾아주는 함수 (구현중)
-# def random_verse():
-#     choice_book = random.choice(list(bible_books.keys()))
-#     choice_chapter = random.randint(1, int(bible.count_chapters(choice_book) + 1))
-#     choice_verse = random.randint(1, int(bible.count_verses(choice_book) + 1))
-#     random_verse_id = verse_ID_generator(choice_book, choice_chapter, choice_verse)
-#     random_verse =  bible.get_verse_text(verse_id=random_verse_id, version=bible.Version.AMERICAN_STANDARD)
-#     print(random_verse)
-#     #오류 남
+#랜덤으로 구절 정하는 함수(구현 중)
+def random_verse():
 
-find_verse()
-#추가할 기능
-#랜덤으로 구절 찾기
-#없는 값 입력 받았을 때 오류 출력하고 돌아가기
+    r_book = random.choice(list(bible_books_eng.keys()))
+    print(bible.get_number_of_chapters(r_book)) #bible book class 에 대해 공부
+    # r_chapter = random.randint(1,bible.get_number_of_chapters(r_book))
+    # r_verse = random.randint(1, bible.get_number_of_verses(r_book,r_chapter))
+    # print(r_book, r_chapter, r_verse)
+
+if __name__ == "__main__":
+    # book = input("책 : ")
+    # chapter = input("장 : ")
+    # verse = input("절 : ")
+    # find_verse(book, chapter, verse)
+    random_verse()
+
+
+# 추가할 기능
+# 랜덤으로 구절 찾기
+# 없는 값 입력 받았을 때 오류 출력하고 돌아가기
