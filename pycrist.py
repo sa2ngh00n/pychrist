@@ -101,7 +101,7 @@ bible_books_eng = {
     "Psalms": 19,
     "Proverbs": 20,
     "Ecclesiastes": 21,
-    "Song of Solomon": 22,
+    "Wisdom_of_Solomon": 22,
     "Isaiah": 23,
     "Jeremiah": 24,
     "Lamentations": 25,
@@ -150,7 +150,7 @@ bible_books_eng = {
 
 # 번역 해주는 함수
 def translate_text(text):
-    translated_info = tr.google(str(text), "ko")
+    translated_info = tr.translate_com(str(text), "ko")
     # 예시 : {'status': 'success', 'engine': 'Google Translate', 'translation': '안녕하세요!', 'dest': 'ko', 'orgin': 'Hello!', 'origin_lang': 'en'}
     return translated_info['translation']
 
@@ -188,6 +188,22 @@ def random_verse():
 
 
 if __name__ == "__main__":
+    print(r"""                                                                                          
+                                                    ,---,                                          ___     
+                ,-.----.                          ,--.' |                 ,--,                   ,--.'|_   
+                \    /  \                         |  |  :       __  ,-. ,--.'|                   |  | :,'  
+                |   :    |                        :  :  :     ,' ,'/ /| |  |,       .--.--.      :  : ' :  
+                |   | .\ :       .--,     ,---.   :  |  |,--. '  | |' | `--'_      /  /    '   .;__,'  /   
+                .   : |: |     /_ ./|    /     \  |  :  '   | |  |   ,' ,' ,'|    |  :  /`./   |  |   |    
+                |   |  \ :  , ' , ' :   /    / '  |  |   /' : '  :  /   '  | |    |  :  ;_     :__,'| :    
+                |   : .  | /___/ \: |  .    ' /   '  :  | | | |  | '    |  | :     \  \    `.    '  : |__  
+                :     |`-'  .  \  ' |  '   ; :__  |  |  ' | : ;  : |    '  : |__    `----.   \   |  | '.'| 
+                :   : :      \  ;   :  '   | '.'| |  :  :_:,' |  , ;    |  | '.'|  /  /`--'  /   ;  :    ; 
+                |   | :       \  \  ;  |   :    : |  | ,'      ---'     ;  :    ; '--'.     /    |  ,   /  
+                `---'.|        :  \  \  \   \  /  `--''                 |  ,   /    `--'---'      ---`-'   
+                `---`         \  ' ;   `----'                          ---`-'                            
+                 `--`                                                                                                                             
+    """)
     print("명령어를 보려면 'help'를 입력하세요.")
     while True:
         user_keyborad_input = input(": ")
@@ -196,6 +212,7 @@ if __name__ == "__main__":
             find mode : 원하는 구절을 찾고 싶을 때 [mode -f]
             random mode : 하루에 묵상할 3개의 구절을 찾고 싶을 때 [mode -r]
             list mode : 성경의 list를 보고 싶을 때 [mode -l]
+            exit : 프로그램을 종료할 때 [exit]
             """)
         if 'mode' in user_keyborad_input:
             if '-f' in user_keyborad_input:
@@ -209,7 +226,9 @@ if __name__ == "__main__":
                     i += 1
                     print(random_verse())
             if '-l' in user_keyborad_input:
-                print(bible_books)
+                print(bible_books.keys())
+        if 'exit' == user_keyborad_input:
+            break
 
 # 추가할 기능
 # 랜덤으로 구절 찾기
