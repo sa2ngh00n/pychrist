@@ -2,6 +2,7 @@
 import os, json, aiofiles
 from py_trans import PyTranslator
 import pythonbible as bible
+from pythonbible import Book
 import random
 
 # tr 객체 선언
@@ -87,12 +88,12 @@ bible_books_eng = {
     "Joshua": 6,
     "Judges": 7,
     "Ruth": 8,
-    "1 Samuel": 9,
-    "2 Samuel": 10,
-    "1 Kings": 11,
-    "2 Kings": 12,
-    "1 Chronicles": 13,
-    "2 Chronicles": 14,
+    "Samuel_1": 9,
+    "Samuel_2": 10,
+    "Kings_1": 11,
+    "Kings_2": 12,
+    "Chronicles_1": 13,
+    "Chronicles_2": 14,
     "Ezra": 15,
     "Nehemiah": 16,
     "Esther": 17,
@@ -124,25 +125,25 @@ bible_books_eng = {
     "John": 43,
     "Acts": 44,
     "Romans": 45,
-    "1 Corinthians": 46,
-    "2 Corinthians": 47,
+    "Corinthians_1": 46,
+    "Corinthians_2": 47,
     "Galatians": 48,
     "Ephesians": 49,
     "Philippians": 50,
     "Colossians": 51,
-    "1 Thessalonians": 52,
-    "2 Thessalonians": 53,
-    "1 Timothy": 54,
-    "2 Timothy": 55,
+    "Thessalonians_1": 52,
+    "Thessalonians_2": 53,
+    "Timothy_1": 54,
+    "Timothy_2": 55,
     "Titus": 56,
     "Philemon": 57,
     "Hebrews": 58,
     "James": 59,
-    "1 Peter": 60,
-    "2 Peter": 61,
-    "1 John": 62,
-    "2 John": 63,
-    "3 John": 64,
+    "Peter_1": 60,
+    "Peter_2": 61,
+    "John_1": 62,
+    "John_2": 63,
+    "John_3": 64,
     "Jude": 65,
     "Revelation": 66
 }
@@ -174,25 +175,41 @@ def verse_ID_generator(book, chapter, verse):
 def find_verse(book, chapter, verse):
     verse_ID = int(verse_ID_generator(book, chapter, verse))
     verse_text = bible.get_verse_text(verse_id=verse_ID, version=bible.Version.AMERICAN_STANDARD)
-    result = translate_text(verse_text)
-    print(result)
+    return translate_text(verse_text)
 
-#랜덤으로 구절 정하는 함수(구현 중)
+#랜덤으로 구절 정하는 함수
 def random_verse():
+    r_book_choice = random.choice(list(Book))
+    r_book = bible_books_eng[str(r_book_choice)[5:].capitalize()]
+    r_chapter = random.randint(1, bible.get_number_of_chapters(r_book_choice))
+    r_verse = random.randint(1, bible.get_number_of_verses(r_book_choice, r_chapter))
+    return find_verse(r_book, r_chapter, r_verse)
 
-    r_book = random.choice(list(bible_books_eng.keys()))
-    print(bible.get_number_of_chapters(r_book)) #bible book class 에 대해 공부
-    # r_chapter = random.randint(1,bible.get_number_of_chapters(r_book))
-    # r_verse = random.randint(1, bible.get_number_of_verses(r_book,r_chapter))
-    # print(r_book, r_chapter, r_verse)
+
 
 if __name__ == "__main__":
-    # book = input("책 : ")
-    # chapter = input("장 : ")
-    # verse = input("절 : ")
-    # find_verse(book, chapter, verse)
-    random_verse()
-
+    print("명령어를 보려면 'help'를 입력하세요.")
+    while True:
+        user_keyborad_input = input(": ")
+        if user_keyborad_input == 'help':
+            print("""
+            find mode : 원하는 구절을 찾고 싶을 때 [mode -f]
+            random mode : 하루에 묵상할 3개의 구절을 찾고 싶을 때 [mode -r]
+            list mode : 성경의 list를 보고 싶을 때 [mode -l]
+            """)
+        if 'mode' in user_keyborad_input:
+            if '-f' in user_keyborad_input:
+                user_book = input("책 : ")
+                user_chapter = input("장 : ")
+                user_verse = input("절 : ")
+                print(find_verse(user_book, user_chapter, user_verse))
+            if '-r' in user_keyborad_input:
+                i = 0
+                while i < 3:
+                    i += 1
+                    print(random_verse())
+            if '-l' in user_keyborad_input:
+                print(bible_books)
 
 # 추가할 기능
 # 랜덤으로 구절 찾기
