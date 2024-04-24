@@ -1,16 +1,15 @@
-# 필요한 요소 import
-import os, json, aiofiles
+import os
+import json
+import random
+import aiofiles
 from py_trans import PyTranslator
 import pythonbible as bible
-from pythonbible import Book
-import random
 
 # tr 객체 선언
 tr = PyTranslator()
 
 # 성경 책 dict
 bible_books = {
-    #korean
     "창세기": 1,
     "출애굽기": 2,
     "레위기": 3,
@@ -35,7 +34,6 @@ bible_books = {
     "아가": 22,
     "이사야": 23,
     "예레미야": 24,
-    "예레미야애가": 25,
     "에스겔": 26,
     "다니엘": 27,
     "호세아": 28,
@@ -149,27 +147,21 @@ bible_books_eng = {
 }
 
 # 번역 해주는 함수
-def translate_text(text):
-    translated_info = tr.translate_com(str(text), "ko")
-    # 예시 : {'status': 'success', 'engine': 'Google Translate', 'translation': '안녕하세요!', 'dest': 'ko', 'orgin': 'Hello!', 'origin_lang': 'en'}
+def translate_text(text, dest="ko"):
+    translated_info = tr.translate_com(str(text), dest)
     return translated_info['translation']
 
 # id 00n 으로 format 해주는 함수
 def formating_nums(id):
     return "{:03d}".format(id)
 
-# verse ID 찾아주는 함수(효율성 개선 시급)
+# verse ID 찾아주는 함수
 def verse_ID_generator(book, chapter, verse):
-    if type(book) == str:
-        book_num = str(bible_books.get(book))
-    elif type(book) == int:
-        book_num = formating_nums(book)
-
+    book_num = str(bible_books.get(book, ""))
     chapter_num = formating_nums(int(chapter))
     verse_num = formating_nums(int(verse))
 
     return book_num + chapter_num + verse_num
-
 
 # 구문 찾아주는 함수
 def find_verse(book, chapter, verse):
@@ -179,14 +171,43 @@ def find_verse(book, chapter, verse):
 
 #랜덤으로 구절 정하는 함수
 def random_verse():
-    r_book_choice = random.choice(list(Book))
-    r_book = bible_books_eng[str(r_book_choice)[5:].capitalize()]
+    r_book_choice = random.choice(list(bible_books_eng.keys()))
+    r_book = bible_books_eng[r_book_choice]
     r_chapter = random.randint(1, bible.get_number_of_chapters(r_book_choice))
     r_verse = random.randint(1, bible.get_number_of_verses(r_book_choice, r_chapter))
     return find_verse(r_book, r_chapter, r_verse)
 
+# 명령어 처리
+def process_command(command):
+    if 'help' in command:
+        print("""
+        find mode : 원하는 구절을 찾고 싶을 때 [mode -f]
+        random mode : 하루에 묵상할 3개의 구절을 찾고 싶을 때 [mode -r]
+        list mode : 성경의 list를 보고 싶을 때 [mode -l] 영어 모드 -> mode -l -e
+        exit : 프로그램을 종료할 때 [exit]
+        """)
+    elif 'mode' in command:
+        if '-f' in command:
+            user_book = input("책 : ")
+            user_chapter = input("장 : ")
+            user_verse = input("절 : ")
+            print(find_verse(user_book, user_chapter, user_verse))
+        elif '-r' in command:
+            for _ in range(3):
+                print(random_verse())
+        elif '-l' in command:
+            if '-e' in command:
+                for book in bible_books_eng.keys():
+                    print(book)
+            else:
+                for book in bible_books.keys():
+                    print(book)
+    elif 'exit' == command:
+        exit()
+    elif 'clear' == command:
+        os.system('cls' if os.name == 'nt' else 'clear')
 
-
+#main
 if __name__ == "__main__":
     print(r"""                                                                                          
                                                     ,---,                                          ___     
@@ -206,30 +227,5 @@ if __name__ == "__main__":
     """)
     print("명령어를 보려면 'help'를 입력하세요.")
     while True:
-        user_keyborad_input = input(": ")
-        if user_keyborad_input == 'help':
-            print("""
-            find mode : 원하는 구절을 찾고 싶을 때 [mode -f]
-            random mode : 하루에 묵상할 3개의 구절을 찾고 싶을 때 [mode -r]
-            list mode : 성경의 list를 보고 싶을 때 [mode -l]
-            exit : 프로그램을 종료할 때 [exit]
-            """)
-        if 'mode' in user_keyborad_input:
-            if '-f' in user_keyborad_input:
-                user_book = input("책 : ")
-                user_chapter = input("장 : ")
-                user_verse = input("절 : ")
-                print(find_verse(user_book, user_chapter, user_verse))
-            if '-r' in user_keyborad_input:
-                i = 0
-                while i < 3:
-                    i += 1
-                    print(random_verse())
-            if '-l' in user_keyborad_input:
-                print(bible_books.keys())
-        if 'exit' == user_keyborad_input:
-            break
-
-# 추가할 기능
-# 랜덤으로 구절 찾기
-# 없는 값 입력 받았을 때 오류 출력하고 돌아가기
+        user_input = input(": ")
+        process_command(user_input)
