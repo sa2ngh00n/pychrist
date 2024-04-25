@@ -1,15 +1,16 @@
-import os
-import json
-import random
-import aiofiles
+# 필요한 요소 import
+import os, json, aiofiles
 from py_trans import PyTranslator
 import pythonbible as bible
+from pythonbible import Book
+import random
 
 # tr 객체 선언
 tr = PyTranslator()
 
 # 성경 책 dict
 bible_books = {
+    #korean
     "창세기": 1,
     "출애굽기": 2,
     "레위기": 3,
@@ -34,6 +35,7 @@ bible_books = {
     "아가": 22,
     "이사야": 23,
     "예레미야": 24,
+    "예레미야애가": 25,
     "에스겔": 26,
     "다니엘": 27,
     "호세아": 28,
@@ -75,6 +77,12 @@ bible_books = {
     "요한3서": 64,
     "유다서": 65,
     "요한계시록": 66,
+    "에스드라스" : 67,
+    "토비트" : 68,
+    "지혜서" : 69,
+    "집회서" : 70,
+    "마카베오기1서" : 71,
+    "마카베오기2서" : 72
 }
 
 bible_books_eng = {
@@ -99,7 +107,7 @@ bible_books_eng = {
     "Psalms": 19,
     "Proverbs": 20,
     "Ecclesiastes": 21,
-    "Wisdom_of_Solomon": 22,
+    "Songs_of_songs": 22,
     "Isaiah": 23,
     "Jeremiah": 24,
     "Lamentations": 25,
@@ -143,71 +151,103 @@ bible_books_eng = {
     "John_2": 63,
     "John_3": 64,
     "Jude": 65,
-    "Revelation": 66
+    "Revelation": 66,
+    "Esdras_1" : 67,
+    "Tobit" : 68,
+    "Wisdom_of_solomon" : 69,
+    "Ecclesiasticus" : 70,
+    "Maccabees_1" : 71,
+    "Maccabees_2" : 72
 }
 
 # 번역 해주는 함수
-def translate_text(text, dest="ko"):
-    translated_info = tr.translate_com(str(text), dest)
+def translate_text(text : str) -> str: 
+    """
+    this function translates eng to korean
+    """
+    translated_info = tr.translate_com(str(text), 'ko')
+    # 예시 : {'status': 'success', 'engine': 'Translate com', 'translation': '안녕하세요!', 'dest': 'ko', 'orgin': 'Hello!', 'origin_lang': 'en'}
     return translated_info['translation']
 
 # id 00n 으로 format 해주는 함수
-def formating_nums(id):
+def formating_nums(id : int) -> str:
+    """
+    This function formats number of id to str
+    """
     return "{:03d}".format(id)
 
-# verse ID 찾아주는 함수
-def verse_ID_generator(book, chapter, verse):
-    book_num = str(bible_books.get(book, ""))
+# verse id 만들어 주는 함수
+def generate_verse_id(book, chapter : int, verse : int) -> str:
+    """
+    This function generates verse id 
+    """
+    if type(book) == str:
+        book_num = str(bible_books.get(book))
+    elif type(book) == int:
+        book_num = formating_nums(book)
+
     chapter_num = formating_nums(int(chapter))
     verse_num = formating_nums(int(verse))
 
     return book_num + chapter_num + verse_num
 
 # 구문 찾아주는 함수
-def find_verse(book, chapter, verse):
-    verse_ID = int(verse_ID_generator(book, chapter, verse))
-    verse_text = bible.get_verse_text(verse_id=verse_ID, version=bible.Version.AMERICAN_STANDARD)
+def find_verse(book : str, chapter : str, verse : str) -> str:
+    """This function finds verse"""
+    verse_id = int(generate_verse_id(book, chapter, verse))
+    verse_text = bible.get_verse_text(verse_id=verse_id, version=bible.Version.AMERICAN_STANDARD)
     return translate_text(verse_text)
 
-#랜덤으로 구절 정하는 함수
-def random_verse():
-    r_book_choice = random.choice(list(bible_books_eng.keys()))
-    r_book = bible_books_eng[r_book_choice]
+#랜덤으로 구절 생성해주는 함수
+def random_verse() -> str:
+    "This function returns random verse"
+    r_book_choice = random.choice(list(Book))
+    r_book = bible_books_eng[str(r_book_choice)[5:].capitalize()]
     r_chapter = random.randint(1, bible.get_number_of_chapters(r_book_choice))
     r_verse = random.randint(1, bible.get_number_of_verses(r_book_choice, r_chapter))
-    return find_verse(r_book, r_chapter, r_verse)
+    return find_verse(r_book, r_chapter, r_verse),f"<{list(bible_books.keys())[list(bible_books.values()).index(r_book)]} | {r_chapter}장 | {r_verse}절>"
 
-# 명령어 처리
-def process_command(command):
-    if 'help' in command:
-        print("""
-        find mode : 원하는 구절을 찾고 싶을 때 [mode -f]
-        random mode : 하루에 묵상할 3개의 구절을 찾고 싶을 때 [mode -r]
-        list mode : 성경의 list를 보고 싶을 때 [mode -l] 영어 모드 -> mode -l -e
-        exit : 프로그램을 종료할 때 [exit]
-        """)
-    elif 'mode' in command:
+#명령어 처리
+def process_command(command : str):
+    """
+    This function processes command
+    """
+    if command == 'help':
+            print("""
+            find mode : 원하는 구절을 찾고 싶을 때 [mode -f]
+            random mode : 하루에 묵상할 3개의 구절을 찾고 싶을 때 [mode -r]
+            list mode : 성경의 list를 보고 싶을 때 [mode -l] 영어 모드 -> mode -l -e
+            exit : 프로그램을 종료할 때 [exit]
+            """)
+    #~~mode 구현
+    if 'mode' in command:
         if '-f' in command:
+            #find mode 구현
             user_book = input("책 : ")
             user_chapter = input("장 : ")
             user_verse = input("절 : ")
             print(find_verse(user_book, user_chapter, user_verse))
         elif '-r' in command:
-            for _ in range(3):
-                print(random_verse())
+            #random mode 3번 출력
+            for i in range(3):
+                print(random_verse(),f"[{i + 1}]")
         elif '-l' in command:
+            #list mode 구현
             if '-e' in command:
+                #eng list 출력
                 for book in bible_books_eng.keys():
                     print(book)
             else:
+                #korean list 출력
                 for book in bible_books.keys():
                     print(book)
     elif 'exit' == command:
+        #프로그램 종료
         exit()
     elif 'clear' == command:
+        #콘솔 정리
         os.system('cls' if os.name == 'nt' else 'clear')
 
-#main
 if __name__ == "__main__":
     print(r"""                                                                                          
                                                     ,---,                                          ___     
@@ -227,5 +267,5 @@ if __name__ == "__main__":
     """)
     print("명령어를 보려면 'help'를 입력하세요.")
     while True:
-        user_input = input(": ")
-        process_command(user_input)
+        user_command = input(": ")
+        process_command(user_command)
