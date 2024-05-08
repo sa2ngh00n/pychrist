@@ -1,3 +1,9 @@
+"""
+TO DO:
+캘린더 추가, 일정 기능 추가
+관련 정보 검색해주는 기능 추가
+"""
+
 # 필요한 요소 import
 import os, json, aiofiles
 import pythonbible as bible
