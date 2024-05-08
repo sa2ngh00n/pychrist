@@ -1,9 +1,9 @@
 # 필요한 요소 import
 import os, json, aiofiles
-from py_trans import PyTranslator
 import pythonbible as bible
-from pythonbible import Book
 import random
+from pythonbible import Book
+from py_trans import PyTranslator
 
 # tr 객체 선언
 tr = PyTranslator()
@@ -170,7 +170,7 @@ def translate_text(text : str) -> str:
     return translated_info['translation']
 
 # id 00n 으로 format 해주는 함수
-def formating_nums(id : int) -> str:
+def format_nums(id : int) -> str:
     """
     This function formats number of id to str
     """
@@ -182,12 +182,12 @@ def generate_verse_id(book, chapter : int, verse : int) -> str:
     This function generates verse id 
     """
     if type(book) == str:
-        book_num = str(bible_books.get(book))
+        book_num = format_nums(bible_books.get(book))
     elif type(book) == int:
-        book_num = formating_nums(book)
+        book_num = format_nums(book)
 
-    chapter_num = formating_nums(int(chapter))
-    verse_num = formating_nums(int(verse))
+    chapter_num = format_nums(int(chapter))
+    verse_num = format_nums(int(verse))
 
     return book_num + chapter_num + verse_num
 
@@ -195,11 +195,12 @@ def generate_verse_id(book, chapter : int, verse : int) -> str:
 def find_verse(book : str, chapter : str, verse : str) -> str:
     """This function finds verse"""
     verse_id = int(generate_verse_id(book, chapter, verse))
-    verse_text = bible.get_verse_text(verse_id=verse_id, version=bible.Version.AMERICAN_STANDARD)
+    #Missing error 예외 처리 후 해결해야함
+    verse_text = bible.get_verse_text(verse_id=verse_id, version=bible.Version.KING_JAMES)
     return translate_text(verse_text)
 
 #랜덤으로 구절 생성해주는 함수
-def random_verse() -> str:
+def void_random_verse() -> str:
     "This function returns random verse"
     r_book_choice = random.choice(list(Book))
     r_book = bible_books_eng[str(r_book_choice)[5:].capitalize()]
@@ -212,41 +213,46 @@ def process_command(command : str):
     """
     This function processes command
     """
-    if command == 'help':
-            print("""
-            find mode : 원하는 구절을 찾고 싶을 때 [mode -f]
-            random mode : 하루에 묵상할 3개의 구절을 찾고 싶을 때 [mode -r]
-            list mode : 성경의 list를 보고 싶을 때 [mode -l] 영어 모드 -> mode -l -e
-            exit : 프로그램을 종료할 때 [exit]
-            """)
-    #~~mode 구현
-    if 'mode' in command:
-        if '-f' in command:
+    sliced_command = command.split("-") 
+    # example : ['mode ', 'r']
+    # index 0 = method, 1 = option 1, 2 = option 2
+    
+    if 'mode ' == sliced_command[0]:
+        if 'f' == sliced_command[1]:
             #find mode 구현
             user_book = input("책 : ")
             user_chapter = input("장 : ")
             user_verse = input("절 : ")
             print(find_verse(user_book, user_chapter, user_verse))
-        elif '-r' in command:
+        elif 'r' == sliced_command[1]:
             #random mode 3번 출력
             for i in range(3):
-                print(random_verse(),f"[{i + 1}]")
-        elif '-l' in command:
-            #list mode 구현
-            if '-e' in command:
+                print(void_random_verse(),f"[{i + 1}]")
+        elif 'l' == sliced_command[1]:
+            #list mode 구현 (모든 언어 표현 가능하게 translate 를 이용해 구현하기)
+            if 'e' == sliced_command[2]:
                 #eng list 출력
                 for book in bible_books_eng.keys():
-                    print(book)
+                    print(f"{book}"),
             else:
                 #korean list 출력
                 for book in bible_books.keys():
-                    print(book)
+                    print(f"{book}"),
     elif 'exit' == command:
         #프로그램 종료
         exit()
     elif 'clear' == command:
         #콘솔 정리
         os.system('cls' if os.name == 'nt' else 'clear')
+    elif command == 'help':
+            print("""
+            find mode : 원하는 구절을 찾고 싶을 때 [mode -f]
+            random mode : 하루에 묵상할 3개의 구절을 찾고 싶을 때 [mode -r]
+            list mode : 성경의 list를 보고 싶을 때 [mode -l] 영어 모드 -> mode -l -e
+            exit : 프로그램을 종료할 때 [exit]
+            """)
+    else:
+        print(f"{command} : 명령어가 존재하지 않습니다.\n'help'로 명령어 목록을 확인해 주세요")
 
 if __name__ == "__main__":
     print(r"""                                                                                          
