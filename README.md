@@ -1,5 +1,5 @@
 # PYCHRIST
-the program using pybible and translation to korean 
+Find and Get!!
 # Features
 find mode : 원하는 구절을 찾고 싶을 때 [mode -f]
 
