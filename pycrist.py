@@ -2,15 +2,19 @@
 TO DO:
 캘린더 추가, 일정 기능 추가
 관련 정보 검색해주는 기능 추가
+리스트 만드는 기능 추가
 """
 
 # 필요한 요소 import
-import os, json, aiofiles
+import os, json, aiofiles,random,requests
 import pythonbible as bible
-import random
 from pythonbible import Book
 from py_trans import PyTranslator
+from pythonbible.errors import VersionMissingVerseError
+from dotenv import load_dotenv
 
+#env 파일 불러오기
+load_dotenv("search_api.env")
 # tr 객체 선언
 tr = PyTranslator()
 
@@ -166,6 +170,12 @@ bible_books_eng = {
     "Maccabees_2" : 72
 }
 
+day = ["아침","점심","저녁"]
+
+#매개 변수 정의
+api_key = os.getenv('API_KEY')
+search_engine_id = os.getenv('SEARCH_ENGINE_ID')
+
 # 번역 해주는 함수
 def translate_text(text : str) -> str: 
     """
@@ -201,9 +211,12 @@ def generate_verse_id(book, chapter : int, verse : int) -> str:
 def find_verse(book : str, chapter : str, verse : str) -> str:
     """This function finds verse"""
     verse_id = int(generate_verse_id(book, chapter, verse))
-    #Missing error 예외 처리 후 해결해야함
-    verse_text = bible.get_verse_text(verse_id=verse_id, version=bible.Version.KING_JAMES)
-    return translate_text(verse_text)
+    #Missing error 예외 처리 후 해결해야함 try-except 문 사용
+    try:
+        verse_text = bible.get_verse_text(verse_id=verse_id, version=bible.Version.KING_JAMES)
+        return translate_text(verse_text)
+    except VersionMissingVerseError as e:
+        return "(구절 없음)"
 
 #랜덤으로 구절 생성해주는 함수
 def void_random_verse() -> str:
@@ -212,7 +225,25 @@ def void_random_verse() -> str:
     r_book = bible_books_eng[str(r_book_choice)[5:].capitalize()]
     r_chapter = random.randint(1, bible.get_number_of_chapters(r_book_choice))
     r_verse = random.randint(1, bible.get_number_of_verses(r_book_choice, r_chapter))
-    return find_verse(r_book, r_chapter, r_verse),f"<{list(bible_books.keys())[list(bible_books.values()).index(r_book)]} | {r_chapter}장 | {r_verse}절>"
+    verse_text = find_verse(r_book, r_chapter, r_verse)
+    book_name = list(bible_books.keys())[list(bible_books.values()).index(r_book)]
+    return f"{verse_text} <{book_name} | {r_chapter}장 | {r_verse}절>"
+
+#구글 api 이용하여 검색하는 함수
+def google_search(api_key, search_engine_id, query):
+    url = "https://www.googleapis.com/customsearch/v1"
+    params = {
+        'key': api_key,
+        'cx': search_engine_id,
+        'q': query
+    }
+    
+    response = requests.get(url, params=params)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        response.raise_for_status()
+
 
 #명령어 처리
 def process_command(command : str):
@@ -233,7 +264,7 @@ def process_command(command : str):
         elif 'r' == sliced_command[1]:
             #random mode 3번 출력
             for i in range(3):
-                print(void_random_verse(),f"[{i + 1}]")
+                print(void_random_verse(),f"[{day[i]}]")
         elif 'l' == sliced_command[1]:
             #list mode 구현 (모든 언어 표현 가능하게 translate 를 이용해 구현하기)
             if 'e' == sliced_command[2]:
@@ -244,6 +275,13 @@ def process_command(command : str):
                 #korean list 출력
                 for book in bible_books.keys():
                     print(f"{book}"),
+        elif 's' == sliced_command[1]:
+            query = input("검색 : ")
+            results = google_search(api_key, search_engine_id, query)
+            for item in results.get('items', []):
+                print(f"Title: {item.get('title')}")
+                print(f"Link: {item.get('link')}")
+                print(f"Snippet: {item.get('snippet')}\n")
     elif 'exit' == command:
         #프로그램 종료
         exit()
@@ -253,6 +291,7 @@ def process_command(command : str):
     elif command == 'help':
             print("""
             find mode : 원하는 구절을 찾고 싶을 때 [mode -f]
+            search mode : 관련 정보 검색하고 싶을 때 [mode -s]
             random mode : 하루에 묵상할 3개의 구절을 찾고 싶을 때 [mode -r]
             list mode : 성경의 list를 보고 싶을 때 [mode -l] 영어 모드 -> mode -l -e
             exit : 프로그램을 종료할 때 [exit]
@@ -260,6 +299,7 @@ def process_command(command : str):
     else:
         print(f"{command} : 명령어가 존재하지 않습니다.\n'help'로 명령어 목록을 확인해 주세요")
 
+#MAIN
 if __name__ == "__main__":
     print(r"""                                                                                          
                                                     ,---,                                          ___     
