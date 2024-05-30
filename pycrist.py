@@ -1,10 +1,3 @@
-"""
-TO DO:
-캘린더 추가, 일정 기능 추가
-관련 정보 검색해주는 기능 추가
-리스트 만드는 기능 추가
-"""
-
 # 필요한 요소 import
 import os, json, aiofiles,random,requests
 import pythonbible as bible
@@ -244,7 +237,6 @@ def google_search(api_key, search_engine_id, query):
     else:
         response.raise_for_status()
 
-
 #명령어 처리
 def process_command(command : str):
     """
@@ -266,15 +258,9 @@ def process_command(command : str):
             for i in range(3):
                 print(void_random_verse(),f"[{day[i]}]")
         elif 'l' == sliced_command[1]:
-            #list mode 구현 (모든 언어 표현 가능하게 translate 를 이용해 구현하기)
-            if 'e' == sliced_command[2]:
-                #eng list 출력
-                for book in bible_books_eng.keys():
-                    print(f"{book}"),
-            else:
-                #korean list 출력
-                for book in bible_books.keys():
-                    print(f"{book}"),
+            #list 출력 구현
+                for book_k, book_e in zip(bible_books.keys(), bible_books_eng.keys()):
+                    print(f"{book_k} {book_e}")
         elif 's' == sliced_command[1]:
             query = input("검색 : ")
             results = google_search(api_key, search_engine_id, query)
@@ -288,12 +274,12 @@ def process_command(command : str):
     elif 'clear' == command:
         #콘솔 정리
         os.system('cls' if os.name == 'nt' else 'clear')
-    elif command == 'help':
+    elif 'help' == command:
             print("""
             find mode : 원하는 구절을 찾고 싶을 때 [mode -f]
             search mode : 관련 정보 검색하고 싶을 때 [mode -s]
             random mode : 하루에 묵상할 3개의 구절을 찾고 싶을 때 [mode -r]
-            list mode : 성경의 list를 보고 싶을 때 [mode -l] 영어 모드 -> mode -l -e
+            list mode : 성경의 list를 보고 싶을 때 [mode -l]
             exit : 프로그램을 종료할 때 [exit]
             """)
     else:
